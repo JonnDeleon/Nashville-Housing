@@ -1,0 +1,144 @@
+select * into 
+from [SQL Projects].dbo.test_1;
+
+select * from housingData;
+
+-- Convert to Date Type
+select SaleDate, convert(date, SaleDate) as NewDate
+from housingData
+
+update housingData
+set SaleDate = convert(date, SaleDate)
+
+-- Property Address
+select * from housingData 
+where PropertyAddress is null;
+
+-- Show ParcelID that has at least one NULL value in ProeprtyAddress
+select ParcelID, PropertyAddress from housingData
+where ParcelID IN ( select ParcelID from housingData where PropertyAddress is null);
+
+-- Fill NULL VALUES
+update a
+set PropertyAddress = isnull(a.PropertyAddress, b.PropertyAddress)
+from housingData a
+join housingData b
+on  a.ParcelId = b.ParcelID
+AND a.UniqueID <> b.UniqueID
+where a.PropertyAddress is null
+-- No more nulls
+
+
+-- Make sure all are from TN
+select *
+from (
+select OwnerAddress, substring(OwnerAddress, charindex(',' , OwnerAddress, (charindex(',', OwnerAddress,1))+1) + 1, LEN(PropertyAddress)) as O from housingData)
+as a
+where a.O not like '%TN%';
+
+-- Look at Owner and Property Address
+select OwnerAddress, PropertyAddress from housingData;
+
+-- Check if they are the same
+select a.* from (
+select UniqueID, PropertyAddress,substring(OwnerAddress, -1,  charindex(', TN', OwnerAddress) + 1 ) as OA from housingData) 
+as a
+where a.OA <> a.PropertyAddress
+-- There is a whitespace issue but not all addresses are equal
+
+-- Create Street and City for Owner and Property
+select parsename(replace(PropertyAddress, ',','.'), 2) as Street,
+		parsename(replace(PropertyAddress, ',', '.'), 1) as City
+from housingData;
+
+alter table housingData 
+add PropertyStreet varchar(255);
+
+update housingData
+set PropertyStreet = parsename(replace(PropertyAddress, ',','.'), 2);
+
+alter table housingData 
+add PropertyCity varchar(255);
+
+update housingData
+set PropertyCity = parsename(replace(PropertyAddress, ',','.'), 1);
+
+alter table housingData
+add OwnerStreet varchar(255);
+
+alter table housingData
+add OwnerCity varchar(255);
+
+
+-- OWNER STREET
+update housingData
+set 
+OwnerStreet = parsename(
+replace(substring(OwnerAddress, -1,  charindex(', TN', OwnerAddress) + 1 ), ',', '.'),2
+);
+
+-- OWNER CITY
+update housingData
+set 
+OwnerCity= parsename(
+replace(substring(OwnerAddress, -1,  charindex(', TN', OwnerAddress) + 1 ), ',', '.'),1
+);
+
+
+select PropertyStreet,PropertyCity,OwnerStreet,OwnerCity from housingData;
+
+-- Find Streets with NULL Acreage and look if Acreage can be found
+select PropertyStreet, Acreage from housingData
+where PropertyStreet IN ( select PropertyStreet from housingData where Acreage is null)
+and Acreage is not null;
+
+-- Fill in Nulls
+update a
+set Acreage = isnull(a.Acreage, b.Acreage)
+from housingData a
+join housingData b
+on  a.PropertyStreet = b.PropertyStreet
+AND a.UniqueID <> b.UniqueID
+where a.Acreage is null
+
+-- CHANGE DATE FORMAT
+
+alter table housingData
+add SaleDate_ varchar(255);
+
+update housingData
+set SaleDate_ = Concat(DATENAME(month, SaleDate), ' ', datepart(day,SaleDate), ',', datepart(year, SaleDate)) from housingData;
+
+select SaleDate_ from housingData
+order by cast(SaleDate_ as date);
+-- SOLD AS VACANT
+--select Distinct(SoldAsVacant) from housingData;
+
+update housingData
+set SoldAsVacant =
+case 
+	when SoldAsVacant like 'Y' then 'Yes'
+	when SoldAsVacant like 'N' then 'No'
+	else SoldAsVacant
+	end
+
+select distinct SoldAsVacant from housingData; 
+
+-- Duplicate Row CTE
+with dupe_cte as (
+select *, 
+	row_number() over ( 
+	partition by ParcelID, PropertyStreet, SaleDate_, SalePrice, LegalReference 
+	order by UniqueID
+	) rowN
+from  housingData )
+delete
+from dupe_cte 
+where rowN > 1;
+--
+
+-- Delete Unused Column
+alter table housingData
+drop column OwnerAddress, PropertyAddress, SaleDate
+--
+select * from housingData;
