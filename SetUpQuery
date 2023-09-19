@@ -1,0 +1,58 @@
+-- Set Up Process May Vary 
+sp_configure 'show advanced options', 1;
+Reconfigure;
+GO
+sp_configure 'Ad Hoc Distributed Queries' , 1;
+RECONFIGURE;
+GO
+
+USE [SQL Projects]
+GO
+
+
+EXEC sp_MSSet_oledb_prop N'Microsoft.ACE.OLEDB.12.0', N'AllowInProcess', 1
+GO
+
+EXEC sp_MSSet_oledb_prop N'Microsoft.ACE.OLEDB.12.0', N'DynamicParameters', 1
+GO
+
+USE [SQL Projects]
+GO
+
+
+--DROP TABLE test_1
+CREATE TABLE test_1 (
+  UniqueID  varchar(5),
+  ParcelID varchar(25) ,
+  LandUse varchar(50) ,
+  PropertyAddress varchar(50) ,
+  SaleDate varchar(10) ,
+  SalePrice varchar(15) ,
+  LegalReference varchar(50) ,
+  SoldAsVacant varchar(3) ,
+  OwnerName varchar(75) ,
+  OwnerAddress varchar(50), 
+  Acreage float,
+  TaxDistrict varchar(25) ,
+  LandValue int ,
+  BuildingValue int ,
+  TotalValue int ,
+  YearBuilt int ,
+  Bedrooms int ,
+  FullBath int ,
+  HalfBath int 
+);
+
+
+USE [SQL Projects];
+GO
+
+BULK INSERT test_1 FROM 'Path\HousingData.csv'
+WITH (
+FIRSTROW = 2,
+FORMAT = 'CSV',
+FIELDTERMINATOR = ',',
+ROWTERMINATOR = '\n'
+
+);
+GO
