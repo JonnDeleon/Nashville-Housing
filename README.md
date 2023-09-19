@@ -26,7 +26,7 @@ from housingData
 ![AltText](housingData/DateTypeConvert.png)
 
 ### Fill NULLS for Property Address
-
+![AltText](housingData/NullProperty.png)
 The following code will clear NULL values from Property Address
 ```
 update a
@@ -75,6 +75,8 @@ OwnerCity= parsename(
 replace(substring(OwnerAddress, -1,  charindex(', TN', OwnerAddress) + 1 ), ',', '.'),1
 );
 ```
+![AltText](housingData/OwnerPropertySplit.png)
+
 ### Fill NULLS for acreage
 Use PropertyStreet to find if Acreage is NULL for any of its rows
 ```
@@ -82,9 +84,9 @@ select PropertyStreet, Acreage from housingData
 where PropertyStreet IN ( select PropertyStreet from housingData where Acreage is null)
 and Acreage is not null;
 ```
+![AltText](housingData/AcreageNulls.png)
 
-The resulting table showed there are NULLs present so they are removed in a identical process to PropertyAddress NULLS
-
+The resulting table shows PropertyStreet that have an Acreage NULL somewhere in the dataset, and an Acreage value that uses elsewhere in the dataset.
 
 ### Change Date Format
 ```
@@ -93,6 +95,8 @@ set SaleDate_ = Concat(DATENAME(month, SaleDate), ' ', datepart(day,SaleDate), '
 ```
 
 After creating a new column SaleDate_, fill its values by parting SaleDate and adding month name
+
+![AltText](housingData/DateFormat.png)
 
 ### Reformat Sold As Vacant
 Some values for SoldAsVacant are registered as 'Y' and 'N' rather than 'Yes' and 'No'.
@@ -108,6 +112,7 @@ case
 
 select distinct SoldAsVacant from housingData; 
 ```
+![AltText](housingData/SoldAsVacant.png)
 Now there are no 'Y' and 'N' values present.
 
 ### Remove Duplicates
@@ -133,6 +138,6 @@ drop column OwnerAddress, PropertyAddress, SaleDate
 ```
 
 ## The Process is now complete!
-The new dataset can be downloaded as the housingData_clean.xls
+The new dataset can now be downloaded as the housingData_clean.xls
 
 
