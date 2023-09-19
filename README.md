@@ -23,6 +23,8 @@ This project was completed with the use of Microsoft SQL Server Management Studi
 select SaleDate, convert(date, SaleDate) as NewDate
 from housingData
 ```
+!housingData/DateTypeConvert.png
+
 ### Fill NULLS for Property Address
 
 The following code will clear NULL values from Property Address
