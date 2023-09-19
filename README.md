@@ -91,7 +91,46 @@ set SaleDate_ = Concat(DATENAME(month, SaleDate), ' ', datepart(day,SaleDate), '
 ```
 
 After creating a new column SaleDate_, fill its values by parting SaleDate and adding month name
-```
+
 ### Reformat Sold As Vacant
+Some values for SoldAsVacant are registered as 'Y' and 'N' rather than 'Yes' and 'No'.
+This is easily fixed by using a case statement.
+```
+update housingData
+set SoldAsVacant =
+case 
+	when SoldAsVacant like 'Y' then 'Yes'
+	when SoldAsVacant like 'N' then 'No'
+	else SoldAsVacant
+	end
+
+select distinct SoldAsVacant from housingData; 
+```
+Now there are no 'Y' and 'N' values present.
+
+### Remove Duplicates
+By using a CTE, check the ParcelID, PropertyStreet, SaleDate_, SalePrice, and LegalReferance, if rowN is greater than 1, then that is a duplicate row.
+
+```
+with dupe_cte as (
+select *, 
+	row_number() over ( 
+	partition by ParcelID, PropertyStreet, SaleDate_, SalePrice, LegalReference 
+	order by UniqueID
+	) rowN
+from  housingData )
+delete
+from dupe_cte 
+where rowN > 1;
+```
+
+### Delete Unused Columns
+```
+alter table housingData
+drop column OwnerAddress, PropertyAddress, SaleDate
+```
+
+## The Process is now complete!
+The new dataset can be downloaded as the housingData_clean.xls
 
 
